@@ -18,7 +18,7 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 #Define Model
 class Todo(Base):
-    _tablename_ = "todos"
+    __tablename__ = "todos"
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, nullable=False)
     description = Column(String, nullable=True)
@@ -26,7 +26,7 @@ class Todo(Base):
 
 
 #Initiallize Detabase's Table
-Base.metadata.create_all(blind=engine)
+Base.metadata.create_all(bind=engine)
 
 
 #Pydantic
@@ -52,7 +52,7 @@ def get_db():
 
 
 @app.post("/todos",response_model=TodoResponse)
-def create_todo(todo: TodoCreate, db: Session = Depends(get_db())):
+def create_todo(todo: TodoCreate, db: Session = Depends(get_db)):
     db_todo = Todo(**todo.dict())
     db.add(db_todo)
     db.commit()
@@ -60,18 +60,18 @@ def create_todo(todo: TodoCreate, db: Session = Depends(get_db())):
     return db_todo
 
 @app.get("/todos", response_model=list[TodoResponse])
-def read_todos(db: Session = Depends(get_db())):
+def read_todos(db: Session = Depends(get_db)):
     return db.query(Todo).all()
 
 @app.get("/todo/{todo_id}", response_model=TodoResponse)
-def read_todo(todo_id: int, db: Session = Depends(get_db())):
+def read_todo(todo_id: int, db: Session = Depends(get_db)):
     db_todo= db.query(Todo).fillter(Todo.id == todo_id).first()
     if not db_todo:
         raise HTTPException(status_code=404, details="Todo not found")
     return db_todo
 
 @app.put("/todo/{todo_id}", response_model=TodoResponse)
-def update_todo(todo_id: int, todo: TodoCreate, db: Session = Depends(get_db())):
+def update_todo(todo_id: int, todo: TodoCreate, db: Session = Depends(get_db)):
     db_todo = db.query(Todo),fillter(Todo.id == todo_id).first()
     if not db_todo:
         raise HTTPException(status_code=404, details="Todo not found")
@@ -82,7 +82,7 @@ def update_todo(todo_id: int, todo: TodoCreate, db: Session = Depends(get_db()))
     return db_todo
 
 @app.delete("/todo/{todo_id}")
-def delete_todo(todo_id: int, db: Session = Depends(get_db())):
+def delete_todo(todo_id: int, db: Session = Depends(get_db)):
     db_todo = db.query(Todo).fillter(Todo.id == todo_id).first
     if not db_todo:
         raise HTTPException(status_code=404, details="Todo not found")
